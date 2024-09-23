@@ -23,10 +23,10 @@ import SignatureIcon from '@mui/icons-material/VerifiedUser';
 import AnalysisIcon from '@mui/icons-material/Analytics';
 import CompareIcon from '@mui/icons-material/Compare';
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { useNavigate } from 'react-router-dom';
 
 // Initialize the Google Generative AI client
 const genAI = new GoogleGenerativeAI("AIzaSyAJ-pysce8vOu8ojBENvxd1hirBgNFljwc");
-
 // Custom prompts for each task
 const taskPrompts = {
   'information extraction': `Analyze this document image and extract key information. 
@@ -102,6 +102,16 @@ const DemoPage = () => {
   const [error, setError] = useState(null);
   const [previewUrls, setPreviewUrls] = useState({ url1: null, url2: null });
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [attempts, setAttempts] = useState(0);
+  const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const storedAttempts = localStorage.getItem('demoAttempts');
+    if (storedAttempts) {
+      setAttempts(parseInt(storedAttempts));
+    }
+  }, []);
 
   const handleFileChange = (event, fileKey) => {
     const selectedFile = event.target.files[0];
@@ -126,8 +136,12 @@ const DemoPage = () => {
   }, []);
 
   const handleTaskClick = (task) => {
-    setSelectedTask(task);
-    setIsDialogOpen(true);
+    if (attempts >= 5) {
+      setShowUpgradeDialog(true);
+    } else {
+      setSelectedTask(task);
+      setIsDialogOpen(true);
+    }
   };
 
   const handleCloseDialog = () => {
@@ -145,6 +159,11 @@ const DemoPage = () => {
   };
 
   const handleSubmit = async () => {
+    if (attempts >= 5) {
+      setShowUpgradeDialog(true);
+      return;
+    }
+
     if ((!files.file1 || (selectedTask === 'image comparison' && !files.file2)) || !selectedTask) {
       setError('Please select the required file(s) and a task.');
       return;
@@ -183,7 +202,9 @@ const DemoPage = () => {
       const result = await model.generateContent(content);
       const response = await result.response;
       const text = response.text();
-
+      const newAttempts = attempts + 1;
+      setAttempts(newAttempts);
+      localStorage.setItem('demoAttempts', newAttempts.toString());
       try {
         const jsonResult = JSON.parse(text);
         setResult(JSON.stringify(jsonResult, null, 2));
@@ -191,6 +212,8 @@ const DemoPage = () => {
         console.error('Failed to parse JSON:', e);
         setResult(text);
       }
+      
+
     } catch (e) {
       setError('An error occurred while processing your request. Please try again.');
       console.error('Error:', e);
@@ -199,6 +222,19 @@ const DemoPage = () => {
     }
   };
 
+  const handleUpgrade = () => {
+    // Redirect to upgrade page or open upgrade modal
+    console.log("Redirecting to upgrade page");
+    // For now, we'll just navigate to a hypothetical upgrade page
+    navigate('/signin');
+  };
+  
+  const handleLogin = () => {
+    // Redirect to login page or open login modal
+    console.log("Redirecting to login page");
+    // For now, we'll just navigate to a hypothetical login page
+    navigate('/login');
+  };
   const fileToBase64 = (file) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -223,21 +259,22 @@ const DemoPage = () => {
           Documatic Demo
         </Typography>
         <Typography variant="body1" paragraph align="center">
-          Choose a task to see our intelligent document processing in action.
+          Choose a task to see our intelligent document processing in action. 
+          You have {5 - attempts} attempts remaining.
         </Typography>
 
         <Grid container spacing={3} sx={{ mt: 2 }}>
-        {tasks.map((task) => (
-          <Grid item xs={12} sm={6} md={3} key={task.id}>
-            <TaskCard
-              title={task.title}
-              description={task.description}
-              onClick={() => handleTaskClick(task.id)}
-              icon={task.icon}
-            />
-          </Grid>
-        ))}
-      </Grid>
+          {tasks.map((task) => (
+            <Grid item xs={12} sm={6} md={3} key={task.id}>
+              <TaskCard
+                title={task.title}
+                description={task.description}
+                onClick={() => handleTaskClick(task.id)}
+                icon={task.icon}
+              />
+            </Grid>
+          ))}
+        </Grid>
 
         <Dialog open={isDialogOpen} onClose={handleCloseDialog} maxWidth="lg" fullWidth>
           <DialogTitle>{selectedTask && tasks.find(t => t.id === selectedTask).title}</DialogTitle>
@@ -358,6 +395,22 @@ const DemoPage = () => {
             <Button onClick={handleCloseDialog}>Close</Button>
             <Button onClick={handleSubmit} disabled={isLoading || (!files.file1 || (selectedTask === 'image comparison' && !files.file2))}>
               {isLoading ? 'Processing...' : 'Process Document'}
+            </Button>
+          </DialogActions>
+        </Dialog>
+        <Dialog open={showUpgradeDialog} onClose={() => setShowUpgradeDialog(false)}>
+          <DialogTitle>Demo Limit Reached</DialogTitle>
+          <DialogContent>
+            <Typography>
+              You have reached the maximum number of demo attempts. 
+              Please log in or upgrade to paid version.Reach out to abc@gmail.com
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setShowUpgradeDialog(false)}>Cancel</Button>
+            <Button onClick={handleLogin} color="primary">Log In</Button>
+            <Button onClick={handleUpgrade} color="secondary" variant="contained">
+              Upgrade
             </Button>
           </DialogActions>
         </Dialog>
