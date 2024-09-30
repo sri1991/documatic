@@ -136,7 +136,7 @@ const DemoPage = () => {
   }, []);
 
   const handleTaskClick = (task) => {
-    if (attempts >= 5) {
+    if (attempts >= 25) {
       setShowUpgradeDialog(true);
     } else {
       setSelectedTask(task);
@@ -159,7 +159,7 @@ const DemoPage = () => {
   };
 
   const handleSubmit = async () => {
-    if (attempts >= 5) {
+    if (attempts >= 25) {
       setShowUpgradeDialog(true);
       return;
     }

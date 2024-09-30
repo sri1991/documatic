@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
+import { Analytics } from "@vercel/analytics/react";
 import {
   AppBar,
   Toolbar,
@@ -81,6 +82,7 @@ function App() {
           <Route path="/blogs" element={<BlogPage />} />
           <Route path="*" element={<Typography variant="h4">Page Not Found</Typography>} />
         </Routes>
+        <Analytics />
       </ThemeProvider>
     </Router>
   );
