@@ -26,7 +26,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { useNavigate } from 'react-router-dom';
 
 // Initialize the Google Generative AI client
-const genAI = new GoogleGenerativeAI("AIzaSyDq0kcFFW4_5VJMJBtY9Ci0HMCCA6tAOTc");
+const genAI = new GoogleGenerativeAI("AIzaSyAP7H36aSXCHMBlNVwTJ2L2mYwMJu9Ku8E");
 // Custom prompts for each task
 const taskPrompts = {
   'information extraction': `Analyze this document image and extract key information. 
